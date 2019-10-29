@@ -1,0 +1,32 @@
+
+# @Date    : 2019-10-29 00:41:54
+# @Author  : Dong (dongwei@tamu.edu)
+# @Link    : https://github.com/tomatoJr
+# @Version : 1.0.0
+
+Software:
+MySQL 8.0.18
+Visual Studio Code 1.39.2
+Server:
+root@localhost for database
+Language:
+SQL
+Python 3.7.4 64-bit
+System:
+macOS Mojave 10.14.6
+Processor:
+1.4 GHz Intel Core i5
+Memory:
+8 GB 2133 MHz LPDDR3
+Graphics:
+Intel Iris Plus Graphics 645 1536 MB
+
+
+Ready to use:
+1.Build local database. Use mysql to conduct 'create database myDB;' command.
+
+2.Make sure you use Python 3.7.4 with modules tkinter for GUI, pymysql for mysql connection.
+
+3.Run application in /dist under macOS.
+
+4.All data are stored in /data/data.xlsx.
