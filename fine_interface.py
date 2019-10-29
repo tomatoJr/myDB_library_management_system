@@ -16,54 +16,49 @@ import datetime
 import re
 
 
+from db import *
 from entry_interface import *
 from main_window import *
 from return_interface import *
 from user_interface import *
 
 
-def fine_mani_interface(db, user_id, identification):
-        # create master
-    master = Tk()
-    master.title('library management system')
-    master.geometry('400x200')
+def fine_mani_interface(master, db, user_id, identification):
+
+    fine_mani_interface_frame = Frame(master)
+    fine_mani_interface_frame.pack(expand=YES, fill=BOTH)
 
     style = ttk.Style()
     style.configure('TButton', foreground='black', background='blue')
     cursor = db.cursor()
 
-    Label(master, text='Check your fine tickets here:').pack()
+    Label(fine_mani_interface_frame, text='Check your fine tickets here:').pack()
 
     sql = "select * from "+identification+"_Fine_History where " + \
         identification+"_id="+str(user_id)+" and status='unpaid'"
     cursor.execute(sql)
     result = cursor.fetchall()
-    print(result)
+    # print(result)
     amount = 0
     for item in result:
         amount += item[5]
-    Label(master, text='Total fine is :$'+str(amount)+".").pack()
+    Label(fine_mani_interface_frame,
+          text='Total fine is :$'+str(amount)+".").pack()
 
     def pay_fine():
         sql = "update "+identification+"_Fine_History set status='paid' where " + \
             identification+"_id="+str(user_id)
-        print(sql)
+        # print(sql)
         cursor.execute(sql)
         db.commit()
 
         messagebox.showinfo(title='Successfully Paid',
                             message="Your fine has been paid")
-        master.destroy()
-        fine_mani_interface(db, user_id, identification)
+        fine_mani_interface_frame.destroy()
+        user_mani_interface(master, db, user_id, identification)
 
-    button = ttk.Button(master, text='pay it now', command=pay_fine)
+        # fine_mani_interface(db, user_id, identification)
+
+    button = ttk.Button(fine_mani_interface_frame,
+                        text='pay it now', command=pay_fine)
     button.pack()
-
-    master.mainloop()
-
-
-if __name__ == "__main__":
-    db = pymysql.connect('localhost', 'root', 'password', 'myDB')
-
-    fine_mani_interface(db, 230004501,  'Student')
-    # fine_mani_interface(db, 460042348,  'Faculty')

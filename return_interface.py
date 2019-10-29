@@ -16,16 +16,16 @@ import datetime
 import re
 
 
+from db import *
 from entry_interface import *
+from fine_interface import *
 from main_window import *
 from user_interface import *
 
 
-def return_book_interface(db, user_id, identification):
-    # create master
-    master = Tk()
-    master.title('library management system')
-    master.geometry('700x300')
+def return_book_interface(master, db, user_id, identification):
+    return_book_interface_frame = Frame(master)
+    return_book_interface_frame.pack(expand=YES, fill=BOTH)
 
     style = ttk.Style()
     style.configure('TButton', foreground='black', background='blue')
@@ -34,7 +34,7 @@ def return_book_interface(db, user_id, identification):
     cursor = db.cursor()
 
     # return book
-    return_frm = Frame(master)
+    return_frm = Frame(return_book_interface_frame)
     return_frm.pack()
     Label(return_frm, text="Select and return borrowed book here:").pack(side=LEFT)
 
@@ -87,9 +87,6 @@ def return_book_interface(db, user_id, identification):
         cursor.execute(sql)
         db.commit()
 
-        # update Student_Rent_Books set due_date = '2019-10-28 21:22:23' where Student_id = 230004501 and book_id = 4 and borrow_date = '2019-10-28 21:22:23'
-        # update Student_Rent_Books set return_date = NULL where Student_id = 230004501 and book_id = 4 and borrow_date = '2019-10-28 21:22:23'
-
         # warning if book expired
         if(return_date > due_date):
             delta = return_date-due_date
@@ -127,20 +124,12 @@ def return_book_interface(db, user_id, identification):
     lb.pack(side=RIGHT)
 
     def back_to_user_interface():
-        master.destroy()
-        user_mani_interface(db, user_id, identification)
+        return_book_interface_frame.destroy()
+        user_mani_interface(master, db, user_id, identification)
 
-    back_frm = Frame(master)
+    back_frm = Frame(return_book_interface_frame)
     back_frm.pack()
     Label(back_frm, text='Go back to the user interface:').pack(side=LEFT)
     back_to_user_interface_button = ttk.Button(
         back_frm, text='back', command=back_to_user_interface)
     back_to_user_interface_button.pack(side=RIGHT)
-
-    master.mainloop()
-
-
-if __name__ == "__main__":
-    db = pymysql.connect('localhost', 'root', 'password', 'myDB')
-    return_book_interface(db, 230004501, 'Student')
-    # return_book_interface(db, 460042348,  'Faculty')

@@ -29,6 +29,13 @@ if __name__ == "__main__":
     # connect myDB
     db = pymysql.connect('localhost', 'root', 'password', 'myDB')
 
-    entry_interface(db)
+    master = Tk()
+    master.title('library management system')
+    master.geometry('600x300')
+
     # 230004501 is a student account
     # 460042348 is a faculty account
+
+    entry_interface(master, db)
+
+    master.mainloop()

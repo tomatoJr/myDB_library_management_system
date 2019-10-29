@@ -16,29 +16,30 @@ import datetime
 import re
 
 
+from db import *
 from entry_interface import *
+import fine_interface
+import return_interface
 from main_window import *
-from return_interface import *
-from fine_interface import *
 
 
-def user_mani_interface(db, user_id, identification):
-    # create master
-    master = Tk()
-    master.title('library management system')
-    master.geometry('700x200')
+def user_mani_interface(master, db, user_id, identification):
 
     style = ttk.Style()
     style.configure('TButton', foreground='black', background='blue')
 
-    # welcome user
+    user_interface_frame = Frame(master)
+    user_interface_frame.pack(expand=YES, fill=BOTH)
+
     cursor = db.cursor()
+
+    # welcome user
     sql = "select name from "+identification + \
         " where "+identification + "_id="+str(user_id)
     try:
         cursor.execute(sql)
         result = cursor.fetchone()
-        Label(master, text="Welcome! " +
+        Label(user_interface_frame, text="Welcome! " +
               identification+" "+str(result[0])).pack()
     except:
         print('error')
@@ -53,57 +54,40 @@ def user_mani_interface(db, user_id, identification):
             result = cursor.fetchone()
             bid = str(result[0])
 
-        # # send message
-        # if identification == "Student":
-        # else:
-
         # check for status in case of duplicate rent record
         sql = "select status from Book where Book_id="+str(bid)
         cursor.execute(sql)
         status = cursor.fetchone()[0]
 
-        # insert rent_book table
-        if identification == "Student" and status == 'available':
-            messagebox.showinfo(title="Successfully borrowed!",
-                                message='Student can borrow book up to 4 months.\n You should return this book before '+str((datetime.datetime.now()+datetime.timedelta(days=120)).date()))
+        if status == 'available':
+            if identification == 'Student':
+                messagebox.showinfo(title="Successfully borrowed!",
+                                    message=identification+' can borrow book up to 4 months.\n You should return this book before '+str((datetime.datetime.now()+datetime.timedelta(days=120)).date()))
+            else:
+                messagebox.showinfo(title="Successfully borrowed!",
+                                    message=identification+' can borrow book up to 1 year.\n You should return this book before '+str((datetime.datetime.now()+datetime.timedelta(days=365)).date()))
 
-            sql = "insert into Student_Rent_Books (Student_id, Book_id, borrow_date) values(" + str(
+            sql = "insert into "+identification+"_Rent_Books ("+identification+"_id, Book_id, borrow_date) values(" + str(
                 user_id)+","+str(bid) + ",CURRENT_TIMESTAMP()" + ")"
             cursor.execute(sql)
             db.commit()
 
-            sql = "(select max(borrow_date) from Student_Rent_Books where Student_id="+str(
+            sql = "(select max(borrow_date) from "+identification+"_Rent_Books where "+identification+"_id="+str(
                 user_id)+" and Book_id = "+str(bid)+")"
             cursor.execute(sql)
             result = cursor.fetchone()
             borrow_date = result[0]
-            due_time = borrow_date+datetime.timedelta(days=120)
 
-            sql = "update Student_Rent_Books set due_date='"+str(due_time)+"' where Student_id="+str(
+            if identification == 'Student':
+                due_time = borrow_date+datetime.timedelta(days=120)
+            else:
+                due_time = borrow_date+datetime.timedelta(days=365)
+
+            sql = "update "+identification+"_Rent_Books set due_date='"+str(due_time)+"' where "+identification+"_id="+str(
                 user_id)+" and Book_id="+str(bid) + " and borrow_date = '"+str(borrow_date)+"'"
             cursor.execute(sql)
             db.commit()
 
-        elif identification == "Faculty" and status == 'available':
-            messagebox.showinfo(title="Successfully borrowed!",
-                                message='Faculty can borrow book up to 1 year.\n You should return this book before '+str((datetime.datetime.now()+datetime.timedelta(days=365)).date()))
-
-            sql = "insert into Faculty_Rent_Books (Faculty_id, Book_id, borrow_date) values(" + str(
-                user_id)+","+str(bid) + ",CURRENT_TIMESTAMP()" + ")"
-            cursor.execute(sql)
-            db.commit()
-
-            sql = "(select max(borrow_date) from Faculty_Rent_Books where Faculty_id="+str(
-                user_id)+" and Book_id = "+str(bid)+")"
-            cursor.execute(sql)
-            result = cursor.fetchone()
-            borrow_date = result[0]
-            due_time = borrow_date+datetime.timedelta(days=365)
-
-            sql = "update Faculty_Rent_Books set due_date='"+str(due_time)+"' where Faculty_id="+str(
-                user_id)+" and Book_id="+str(bid) + " and borrow_date = '"+str(borrow_date)+"'"
-            cursor.execute(sql)
-            db.commit()
         else:
             messagebox.showwarning(title="Book Unavailable!",
                                    message='This book is unavailable now.')
@@ -126,7 +110,7 @@ def user_mani_interface(db, user_id, identification):
             if book_status == 'available':
                 messagebox.showinfo(title='Book Info', message=info)
 
-                borrow_frm = Frame(master)
+                borrow_frm = Frame(user_interface_frame)
                 borrow_frm.pack()
                 Label(borrow_frm, text="You can borrow "+book_name+" now:").pack(
                     side=LEFT)
@@ -139,7 +123,7 @@ def user_mani_interface(db, user_id, identification):
             print('error')
 
     # inquiry for book id
-    inquiry_frm = Frame(master)
+    inquiry_frm = Frame(user_interface_frame)
     inquiry_frm.pack()
     Label(inquiry_frm, text="You can search for book by input book id here:").pack(
         side=LEFT)
@@ -161,11 +145,11 @@ def user_mani_interface(db, user_id, identification):
             book_author = str(result[3])
             book_status = str(result[4])
             info = "title: "+book_name+"\nauthor: "+book_author+"\n"+book_status+" now"
-            # Label(master, text=info).pack()
+            # Label(user_interface_frame, text=info).pack()
             if book_status == 'available':
                 messagebox.showinfo(title='Book Info', message=info)
 
-                borrow_frm = Frame(master)
+                borrow_frm = Frame(user_interface_frame)
                 borrow_frm.pack()
                 Label(borrow_frm, text="You can borrow "+book_name+" now:").pack(
                     side=LEFT)
@@ -179,7 +163,7 @@ def user_mani_interface(db, user_id, identification):
 
     # inquiry for book title
     # The Hunger Games
-    inquiry_by_t_frm = Frame(master)
+    inquiry_by_t_frm = Frame(user_interface_frame)
     inquiry_by_t_frm.pack()
     Label(inquiry_by_t_frm, text="You can search for book by input book title here:").pack(
         side=LEFT)
@@ -190,11 +174,12 @@ def user_mani_interface(db, user_id, identification):
     bt_entry.pack(side=RIGHT)
 
     def return_book_func():
-        master.destroy()
-        return_book_interface(db, user_id, identification)
+        user_interface_frame.destroy()
+        return_interface.return_book_interface(
+            master, db, user_id, identification)
 
     # return book
-    return_frm = Frame(master)
+    return_frm = Frame(user_interface_frame)
     return_frm.pack()
     Label(return_frm, text="Return borrowed book here:").pack(
         side=LEFT)
@@ -203,11 +188,11 @@ def user_mani_interface(db, user_id, identification):
     button.pack(side=RIGHT)
 
     def fine_button_func():
-        master.destroy()
-        fine_mani_interface(db, user_id, identification)
+        user_interface_frame.destroy()
+        fine_interface.fine_mani_interface(master, db, user_id, identification)
 
     # check fine ticket
-    fine_frm = Frame(master)
+    fine_frm = Frame(user_interface_frame)
     fine_frm.pack()
     Label(fine_frm, text="Check for fine tickets here:").pack(
         side=LEFT)
@@ -216,15 +201,7 @@ def user_mani_interface(db, user_id, identification):
     button.pack(side=RIGHT)
 
     # quit button
-    quit_frm = Frame(master)
+    quit_frm = Frame(user_interface_frame)
     quit_frm.pack()
     Label(quit_frm, text='Quit').pack(side=LEFT)
     ttk.Button(quit_frm, text='Quit', command=master.quit).pack(side=RIGHT)
-
-    master.mainloop()
-
-
-if __name__ == "__main__":
-    db = pymysql.connect('localhost', 'root', 'password', 'myDB')
-    user_mani_interface(db, 230004501,  'Student')
-    # user_mani_interface(db, 460042348,  'Faculty')
