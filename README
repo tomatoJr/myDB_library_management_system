@@ -30,3 +30,7 @@ Ready to use:
 3.Run application in /dist under macOS.
 
 4.All data are stored in /data/data.xlsx.
+
+5.The main file is main_window.py.
+
+6.Make sure you start MySQL Server before run the application.
